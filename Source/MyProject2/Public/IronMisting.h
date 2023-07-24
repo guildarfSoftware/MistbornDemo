@@ -4,24 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Containers/Array.h"
-#include "MetallicObject.generated.h"
+#include "MetallicObject.h"
+#include "IronMisting.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class MYPROJECT2_API UMetallicObject : public UActorComponent
+class MYPROJECT2_API UIronMisting : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
-	static TArray<USceneComponent*> metallicObjectPositions;
 	// Sets default values for this component's properties
-	UMetallicObject();
+	UIronMisting();
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	float detectRange = 300.0f;
+	int maxDetectedObjects = 5;
+	void DrawLineBetweenLocations(const FVector& StartLocation, const FVector& EndLocation);
 
 public:	
 	// Called every frame
