@@ -14,7 +14,7 @@ class MYPROJECT2_API UMetallicObject : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	static TArray<USceneComponent*> metallicObjectPositions;
+	static TArray<UMetallicObject*> metallicObjects;
 	// Sets default values for this component's properties
 	UMetallicObject();
 
@@ -27,5 +27,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+
 };

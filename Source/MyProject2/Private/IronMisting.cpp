@@ -23,65 +23,61 @@ void UIronMisting::BeginPlay()
 	
 }
 
-// Function to calculate the squared distance between two FVectors
-float SquaredDistance(const FVector& A, const FVector& B)
-{
-    return (A - B).SizeSquared();
-}
-
-// Custom sorting function to sort FVector array based on distance to a reference FVector
-bool SortByDistance(const FVector& A, const FVector& B, const FVector& ReferenceVector)
-{
-    return SquaredDistance(A, ReferenceVector) < SquaredDistance(B, ReferenceVector);
-}
-
-void UIronMisting::DrawLineBetweenLocations(const FVector& StartLocation, const FVector& EndLocation)
-{
-    // Draw the debug line between the start and end locations
-    DrawDebugLine(
-        GetOwner()->GetWorld(),
-        StartLocation,
-        EndLocation,
-        FColor::Blue, // Color of the line (you can change this to any other color)
-        false, // Persistent lines (false means the line will disappear after one frame)
-        -1.0f, // Lifetime (how long the line will persist, -1 means infinite)
-        0,
-        1.0f // Thickness of the line
-    );
-}
 
 // Called every frame
 void UIronMisting::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	FVector myLocation=GetOwner()->GetActorLocation();
+	TArray <UMetallicObject*> metallicObjects;
 	
-	UE_LOG(LogTemp, Warning, TEXT("Start frame"));
-	FVector myLocation=GetOwner()->GetRootComponent()->GetComponentLocation();
-	TArray <FVector> locations;
-	for (int i =0; i<UMetallicObject::metallicObjectPositions.Num();i++)
+	ProcessMetalObjects(&metallicObjects, UIronMisting::detectRange, UIronMisting::maxDetectedObjects);
+
+	for( UMetallicObject* metallicObject : metallicObjects)
 	{
-		FVector metallicLocation = UMetallicObject::metallicObjectPositions[i]->GetComponentLocation();
-		if(	abs(myLocation.X-metallicLocation.X) < detectRange &&
-			abs(myLocation.Y-metallicLocation.Y) < detectRange &&
-			abs(myLocation.Z-metallicLocation.Z) < detectRange
-		)
-			locations.Add(metallicLocation);
+		FVector metalLocation = metallicObject->GetOwner()->GetActorLocation();
+		// Draw the debug line between the start and end locations
+		DrawDebugLine(
+			GetWorld(),
+			myLocation,
+			metalLocation,
+			FColor::Blue, // Color of the line (you can change this to any other color)
+			false, // Persistent lines (false means the line will disappear after one frame)
+			-1.0f, // Lifetime (how long the line will persist, -1 means infinite)
+			0,
+			1.0f // Thickness of the line
+		);
 	}
-	locations.Sort([myLocation](const FVector& A, const FVector& B)
-    {
-        return SortByDistance(A, B, myLocation);
-    });
-	//if(locations.Num()!=0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Mylocation: X = %f, Y = %f, Z = %f"), myLocation.X, myLocation.Y, myLocation.Z);
-	}
-	for( int i =0 ; i < 5 && i< locations.Num(); i++)
-	{
-		FVector location = locations[i];
-		UE_LOG(LogTemp, Warning, TEXT("Vector: X = %f, Y = %f, Z = %f"), location.X, location.Y, location.Z);
-		DrawLineBetweenLocations(myLocation,location);
-	} 
-	UE_LOG(LogTemp, Warning, TEXT("End frame"));
 	// ...
+}
+
+
+void UIronMisting::ProcessMetalObjects(TArray <UMetallicObject*> *metalObjects, float _detectRange, int _maxDetectedObjects)
+{
+	FVector myLocation=GetOwner()->GetActorLocation();
+
+	for (UMetallicObject *metallicObject:UMetallicObject::metallicObjects)
+	{
+		FVector metallicLocation = metallicObject->GetOwner()->GetActorLocation();
+		if(	abs(myLocation.X-metallicLocation.X) < _detectRange &&
+			abs(myLocation.Y-metallicLocation.Y) < _detectRange &&
+			abs(myLocation.Z-metallicLocation.Z) < _detectRange)
+		{
+			metalObjects->Add(metallicObject);
+		}
+	}
+
+	metalObjects->Sort([myLocation](const UMetallicObject& A, const UMetallicObject& B)
+	{
+		float DistanceA = FVector::DistSquared((&A)->GetOwner()->GetActorLocation(), myLocation);
+		float DistanceB = FVector::DistSquared((&B)->GetOwner()->GetActorLocation(), myLocation);
+		return DistanceA < DistanceB;
+	});
+
+	if(metalObjects->Num()> _maxDetectedObjects)
+	{
+		metalObjects->SetNum(_maxDetectedObjects);
+	}
 }
 

@@ -22,7 +22,7 @@ protected:
 	virtual void BeginPlay() override;
 	float detectRange = 300.0f;
 	int maxDetectedObjects = 5;
-	void DrawLineBetweenLocations(const FVector& StartLocation, const FVector& EndLocation);
+	void ProcessMetalObjects(TArray<UMetallicObject*> *metalLocations, float _detectRange, int _maxDetectedObjects);
 
 public:	
 	// Called every frame
